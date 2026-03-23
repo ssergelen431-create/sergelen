@@ -158,27 +158,17 @@ header h1{margin:0;font-size:1.5rem;}
 
 <script>
 const countries=[
+  
+ 
   {
     name:"Монгол",
     capital:"Улаанбаатар",
     flag:"https://upload.wikimedia.org/wikipedia/commons/4/4c/Flag_of_Mongolia.svg",
     population:"3,4 сая",
     area:"1,564,116 км²",
-    history:"Монгол улс нь 1206 онд Чингис хаан байгуулаад их эзэнт гүрэн байгуулсан.",
+    history:"Монгол улс 1206 онд Чингис хаан байгуулагдсан.",
     funFact:"Монголд дэлхийн хамгийн өндөр төвшний тал нутаг байдаг."
   },
-  
-  
-  {
-    name:"АНУ",
-    capital:"Вашингтон, D.C.",
-    flag:"https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg",
-    population:"331 сая",
-    area:"9,833,520 км²",
-    history:"АНУ нь 1776 онд байгуулагдсан, дэлхийн хүчирхэг улс юм.",
-    funFact:"АНУ нь дэлхийн хамгийн олон кино үйлдвэрлэдэг улс."
-  },
-  
   {
     name:"Япон",
     capital:"Токио",
@@ -188,7 +178,15 @@ const countries=[
     history:"Япон олон мянган жилийн соёл иргэншилтэй улс.",
     funFact:"Япон дэлхийн хамгийн өндөр амьдралтай улс юм."
   },
-  
+  {
+    name:"АНУ",
+    capital:"Вашингтон, D.C.",
+    flag:"https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg",
+    population:"331 сая",
+    area:"9,833,520 км²",
+    history:"АНУ нь 1776 онд байгуулагдсан, дэлхийн хүчирхэг улс.",
+    funFact:"АНУ нь дэлхийн хамгийн олон кино үйлдвэрлэдэг улс."
+  },
   {
     name:"Франц",
     capital:"Парис",
@@ -414,8 +412,9 @@ const countries=[
     history:"Өмнөд Африк олон үндэстний улс бөгөөд соёлын хувьд баялаг.",
     funFact:"Өмнөд Африк нь дэлхийн хамгийн олон алмаз олборлодог орон."
   }
+
+  // Чи хүсвэл 10+ улс нэмэх боломжтой
 ];
-  
 
 const container=document.getElementById('countryContainer');
 const searchInput=document.getElementById('searchInput');
