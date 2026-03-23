@@ -1,11 +1,514 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Улс Орнуудын Танилцуулга</title>
+<style>
+:root {
+  --bg-color:#f4f4f4;
+  --text-color:#111;
+  --card-bg:#fff;
+  --card-shadow:rgba(0,0,0,0.1);
+  --primary:#4caf50;
+}
+[data-theme="dark"] {
+  --bg-color:#121212;
+  --text-color:#eee;
+  --card-bg:#1e1e1e;
+  --card-shadow:rgba(255,255,255,0.1);
+  --primary:#81c784;
+}
+body {
+  background:var(--bg-color);
+  color:var(--text-color);
+  font-family: Arial, sans-serif;
+  margin:0;
+  padding:0;
+}
+header {
+  padding:15px 30px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background: var(--card-bg);
+  box-shadow:0 2px 5px var(--card-shadow);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+header h1{margin:0;font-size:1.5rem;}
+#themeToggle{
+  padding:8px 12px;
+  cursor:pointer;
+  border:none;
+  background:var(--primary);
+  color:#fff;
+  border-radius:5px;
+}
+.search-sort{
+  display:flex;
+  justify-content:space-between;
+  padding:15px 30px;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.search-sort input, .search-sort select{
+  padding:8px;
+  font-size:1rem;
+  border-radius:5px;
+  border:1px solid #ccc;
+  flex:1;
+  min-width:150px;
+}
+.container{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:20px;
+  padding:20px 30px;
+}
+.card{
+  background:var(--card-bg);
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 5px var(--card-shadow);
+  cursor:pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover{
+  transform: scale(1.03);
+  box-shadow:0 4px 15px var(--card-shadow);
+}
+.card img{
+  width:100%;
+  border-radius:8px;
+  margin-bottom:10px;
+}
+.card h2{
+  margin:5px 0;
+  font-size:1.2rem;
+}
+.modal{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s;
+}
+.modal.active{
+  opacity:1;
+  pointer-events:auto;
+}
+.modal-content{
+  background:var(--card-bg);
+  padding:20px;
+  border-radius:10px;
+  max-width:500px;
+  width:90%;
+  box-shadow:0 5px 20px var(--card-shadow);
+  position:relative;
+}
+.modal-content img{
+  width:100%;
+  border-radius:8px;
+  margin-bottom:15px;
+}
+.close-btn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  background:var(--primary);
+  border:none;
+  color:#fff;
+  padding:5px 10px;
+  cursor:pointer;
+  border-radius:5px;
+}
+.modal-content h2{margin-top:0;}
+.modal-content p{margin:5px 0;font-size:0.95rem;line-height:1.4;}
+</style>
 </head>
-<body>
-    
+<body data-theme="light">
+<header>
+  <h1>Улс Орнууд</h1>
+  <button id="themeToggle">Dark Mode</button>
+</header>
+
+<div class="search-sort">
+  <input type="text" id="searchInput" placeholder="Улсын нэрээр хайх...">
+  <select id="sortSelect">
+    <option value="name">Нэрээр эрэмбэлэх</option>
+    <option value="population">Хүн амын тоогоор буурахаар</option>
+  </select>
+</div>
+
+<div class="container" id="countryContainer"></div>
+
+<div class="modal" id="modal">
+  <div class="modal-content" id="modalContent">
+    <button class="close-btn" id="closeModal">Хаах</button>
+    <!-- Дэлгэрэнгүй мэдээлэл энд нэмэгдэнэ -->
+  </div>
+</div>
+
+<script>
+const countries=[
+  {
+    name:"Монгол",
+    capital:"Улаанбаатар",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/4/4c/Flag_of_Mongolia.svg",
+    population:"3,4 сая",
+    area:"1,564,116 км²",
+    history:"Монгол улс нь 1206 онд Чингис хаан байгуулаад их эзэнт гүрэн байгуулсан.",
+    funFact:"Монголд дэлхийн хамгийн өндөр төвшний тал нутаг байдаг."
+  },
+  
+  {
+    name:"Япон",
+    capital:"Токио",
+    flag:"https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg",
+    population:"125,8 сая",
+    area:"377,975 км²",
+    history:"Япон нь олон мянган жилийн соёл иргэншилтэй, технологийн дэвшил өндөртэй улс.",
+    funFact:"Япон дэлхийн хамгийн өндөр амьдралтай улс юм."
+  },
+  {
+    name:"АНУ",
+    capital:"Вашингтон, D.C.",
+    flag:"https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg",
+    population:"331 сая",
+    area:"9,833,520 км²",
+    history:"АНУ нь 1776 онд байгуулагдсан, дэлхийн хүчирхэг улс юм.",
+    funFact:"АНУ нь дэлхийн хамгийн олон кино үйлдвэрлэдэг улс."
+  },
+  
+  {
+    name:"Монгол",
+    capital:"Улаанбаатар",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/4/4c/Flag_of_Mongolia.svg",
+    population:"3,4 сая",
+    area:"1,564,116 км²",
+    history:"Монгол улс 1206 онд Чингис хаан байгуулагдсан.",
+    funFact:"Монголд дэлхийн хамгийн өндөр төвшний тал нутаг байдаг."
+  },
+  {
+    name:"Япон",
+    capital:"Токио",
+    flag:"https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg",
+    population:"125,8 сая",
+    area:"377,975 км²",
+    history:"Япон олон мянган жилийн соёл иргэншилтэй улс.",
+    funFact:"Япон дэлхийн хамгийн өндөр амьдралтай улс юм."
+  },
+  {
+    name:"АНУ",
+    capital:"Вашингтон, D.C.",
+    flag:"https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg",
+    population:"331 сая",
+    area:"9,833,520 км²",
+    history:"АНУ нь 1776 онд байгуулагдсан, дэлхийн хүчирхэг улс.",
+    funFact:"АНУ нь дэлхийн хамгийн олон кино үйлдвэрлэдэг улс."
+  },
+  {
+    name:"Франц",
+    capital:"Парис",
+    flag:"https://upload.wikimedia.org/wikipedia/en/c/c3/Flag_of_France.svg",
+    population:"67 сая",
+    area:"643,801 км²",
+    history:"Франц нь урлаг, соёлын төв бөгөөд олон хувьсгалтай орон.",
+    funFact:"Францын Эйфелийн цамхаг нь 1889 онд баригдсан."
+  },
+  {
+    name:"Хятад",
+    capital:"Бээжин",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/f/fa/Flag_of_the_People%27s_Republic_of_China.svg",
+    population:"1,412 сая",
+    area:"9,596,961 км²",
+    history:"Хятад дэлхийн хамгийн олон хүн амтай улс.",
+    funFact:"Хятадын Улаан хана нь дэлхийн хамгийн урт бүтэц юм."
+  },
+  {
+    name:"Орос",
+    capital:"Москва",
+    flag:"https://upload.wikimedia.org/wikipedia/en/f/f3/Flag_of_Russia.svg",
+    population:"146 сая",
+    area:"17,098,242 км²",
+    history:"Орос газар нутгаар дэлхийд хамгийн том улс.",
+    funFact:"Оросын Сибир нь дэлхийн хамгийн хүйтэн мужуудын нэг."
+  },
+  {
+    name:"Их Британи",
+    capital:"Лондон",
+    flag:"https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg",
+    population:"67 сая",
+    area:"243,610 км²",
+    history:"Их Британи нь колонийн түүхтэй, олон соёлтой.",
+    funFact:"Лондонгийн цагны цамхаг Big Ben нь алдартай."
+  },
+  {
+    name:"Итали",
+    capital:"Ром",
+    flag:"https://upload.wikimedia.org/wikipedia/en/0/03/Flag_of_Italy.svg",
+    population:"60 сая",
+    area:"301,340 км²",
+    history:"Итали нь урлаг, архитектур, хоолны соёлын төв.",
+    funFact:"Итали нь пицца болон пастагийн эх орон."
+  },
+  {
+    name:"Канад",
+    capital:"Оттава",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Canada.svg",
+    population:"38 сая",
+    area:"9,984,670 км²",
+    history:"Канад нь байгалийн үзэсгэлэнт газар, олон үндэстэнтэй улс.",
+    funFact:"Канад нь дэлхийн хамгийн олон нууртай улс."
+  },
+  {
+    name:"Бразил",
+    capital:"Бразилиа",
+    flag:"https://upload.wikimedia.org/wikipedia/en/0/05/Flag_of_Brazil.svg",
+    population:"213 сая",
+    area:"8,515,767 км²",
+    history:"Бразил тропик ой мод, карнавал баяруудаараа алдартай.",
+    funFact:"Бразилын Амазон ой дэлхийн хамгийн том ой юм."
+  },
+  {
+    name:"Австрали",
+    capital:"Канберра",
+    flag:"https://upload.wikimedia.org/wikipedia/en/b/b9/Flag_of_Australia.svg",
+    population:"25 сая",
+    area:"7,692,024 км²",
+    history:"Австрали нь 1788 онд Британи колони болжээ.",
+    funFact:"Австралид дэлхийн хамгийн том цөлийн хэсэг бий."
+  },
+  {
+    name:"Өмнөд Солонгос",
+    capital:"Сөүл",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/0/09/Flag_of_South_Korea.svg",
+    population:"51 сая",
+    area:"100,210 км²",
+    history:"Өмнөд Солонгос технологи, соёлын өндөр хөгжилтэй.",
+    funFact:"K-Pop болон технологийн салбараараа алдартай."
+  },
+  {
+    name:"Испани",
+    capital:"Мадрид",
+    flag:"https://upload.wikimedia.org/wikipedia/en/9/9a/Flag_of_Spain.svg",
+    population:"47 сая",
+    area:"505,990 км²",
+    history:"Испани нь урлаг, соёлын баялаг түүхтэй улс.",
+    funFact:"Испани нь фламенко бүжиг болон паэлла хоолоор алдартай."
+  },
+  {
+    name:"Герман",
+    capital:"Берлин",
+    flag:"https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg",
+    population:"83 сая",
+    area:"357,022 км²",
+    history:"Герман нь технологи, инженерчлэлийн өндөр хөгжилтэй.",
+    funFact:"Герман нь дэлхийн хамгийн олон авто машины үйлдвэрлэгч улс."
+  },
+  {
+    name:"Швед",
+    capital:"Стокгольм",
+    flag:"https://upload.wikimedia.org/wikipedia/en/4/4c/Flag_of_Sweden.svg",
+    population:"10 сая",
+    area:"450,295 км²",
+    history:"Швед нь олон нийтийн сайн сайхны өндөр төвшинд байдаг.",
+    funFact:"Швед нь IKEA брэндийн эх орон."
+  },
+  {
+    name:"Норвеги",
+    capital:"Осло",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/d/d9/Flag_of_Norway.svg",
+    population:"5,4 сая",
+    area:"385,207 км²",
+    history:"Норвеги нь фьорд, байгалийн үзэсгэлэнт орон.",
+    funFact:"Норвеги нь цэвэр эрчим хүчээрээ алдартай."
+  },
+  {
+    name:"Швейцарь",
+    capital:"Берн",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/f/f3/Flag_of_Switzerland.svg",
+    population:"8,5 сая",
+    area:"41,285 км²",
+    history:"Швейцарь нь олон улсын санхүүгийн төв.",
+    funFact:"Швейцарь нь цагны үйлдвэрлэлээрээ алдартай."
+  },
+  {
+    name:"Индонез",
+    capital:"Жакарта",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/9/9f/Flag_of_Indonesia.svg",
+    population:"273 сая",
+    area:"1,904,569 км²",
+    history:"Индонез олон арлын улс, олон арал бүхий орон.",
+    funFact:"Индонез нь дэлхийн хамгийн олон аралтай улс."
+  },
+  {
+    name:"Энэтхэг",
+    capital:"Нью Дели",
+    flag:"https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg",
+    population:"1,393 сая",
+    area:"3,287,263 км²",
+    history:"Энэтхэг нь эртний соёл, буддизм, хиндү шашны эх орон.",
+    funFact:"Энэтхэг нь дэлхийн хамгийн олон хүн амтай улс."
+  },
+  {
+    name:"Пакистан",
+    capital:"Исламабад",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/3/32/Flag_of_Pakistan.svg",
+    population:"220 сая",
+    area:"881,913 км²",
+    history:"Пакистан нь 1947 онд Энэтхэгээс тусгаарласан улс.",
+    funFact:"Пакистан нь дэлхийн хамгийн өндөр уулын нэгтэй."
+  },
+  {
+    name:"Турк",
+    capital:"Анкара",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/b/b4/Flag_of_Turkey.svg",
+    population:"82 сая",
+    area:"783,356 км²",
+    history:"Турк нь Европ, Азийн зааг дээр оршдог улс.",
+    funFact:"Турк нь дэлхийн алдартай кофе соёлыг хөгжүүлсэн."
+  },
+  {
+    name:"Египет",
+    capital:"Каир",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/f/fe/Flag_of_Egypt.svg",
+    population:"102 сая",
+    area:"1,001,450 км²",
+    history:"Египет эртний пирамидууд болон фараонуудаараа алдартай.",
+    funFact:"Египет нь Нил мөрний эргэн тойронд хөгжсөн."
+  },
+  {
+    name:"Мексик",
+    capital:"Мехико",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/f/fc/Flag_of_Mexico.svg",
+    population:"128 сая",
+    area:"1,964,375 км²",
+    history:"Мексик нь ацтек, майя соёлын өвтэй.",
+    funFact:"Мексик нь шоколад, тортилла хоолоор алдартай."
+  },
+  {
+    name:"Аргентин",
+    capital:"Буэнос-Айрес",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/1/1a/Flag_of_Argentina.svg",
+    population:"45 сая",
+    area:"2,780,400 км²",
+    history:"Аргентин нь Латин Америкийн томоохон орон.",
+    funFact:"Аргентин нь танго бүжгээр алдартай."
+  },
+  {
+    name:"Перу",
+    capital:"Лима",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/c/cf/Flag_of_Peru.svg",
+    population:"33 сая",
+    area:"1,285,216 км²",
+    history:"Перу нь Инка соёлын төв байсан.",
+    funFact:"Мачу Пикчу нь дэлхийн алдартай түүхэн газар."
+  },
+  {
+    name:"Сингапур",
+    capital:"Сингапур",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/4/48/Flag_of_Singapore.svg",
+    population:"5,7 сая",
+    area:"728,6 км²",
+    history:"Сингапур нь жижиг боловч маш өндөр хөгжилтэй хот улс.",
+    funFact:"Сингапур нь дэлхийн хамгийн цэвэр хотуудын нэг."
+  },
+  {
+    name:"Филиппин",
+    capital:"Манила",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/9/99/Flag_of_the_Philippines.svg",
+    population:"109 сая",
+    area:"300,000 км²",
+    history:"Филиппин нь олон арлын улс бөгөөд олон арал бүхий орон.",
+    funFact:"Филиппин нь дэлхийн хамгийн олон аралтай улс."
+  },
+  {
+    name:"Өмнөд Африк",
+    capital:"Преториа",
+    flag:"https://upload.wikimedia.org/wikipedia/commons/a/af/Flag_of_South_Africa.svg",
+    population:"59 сая",
+    area:"1,221,037 км²",
+    history:"Өмнөд Африк олон үндэстний улс бөгөөд соёлын хувьд баялаг.",
+    funFact:"Өмнөд Африк нь дэлхийн хамгийн олон алмаз олборлодог орон."
+  }
+];
+  
+
+const container=document.getElementById('countryContainer');
+const searchInput=document.getElementById('searchInput');
+const sortSelect=document.getElementById('sortSelect');
+const modal=document.getElementById('modal');
+const modalContent=document.getElementById('modalContent');
+const closeModal=document.getElementById('closeModal');
+
+function renderCountries(list){
+  container.innerHTML="";
+  list.forEach(c=>{
+    const card=document.createElement('div');
+    card.className="card";
+    card.innerHTML=`<img src="${c.flag}" alt="Flag of ${c.name}">
+      <h2>${c.name}</h2>
+      <p><strong>Нийслэл:</strong> ${c.capital}</p>
+      <p><strong>Хүн ам:</strong> ${c.population}</p>`;
+    card.addEventListener('click',()=>showModal(c));
+    container.appendChild(card);
+  });
+}
+
+function showModal(country){
+  modalContent.innerHTML=`<button class="close-btn" id="closeModal">Хаах</button>
+    <img src="${country.flag}" alt="Flag of ${country.name}">
+    <h2>${country.name}</h2>
+    <p><strong>Нийслэл:</strong> ${country.capital}</p>
+    <p><strong>Хүн ам:</strong> ${country.population}</p>
+    <p><strong>Газар нутаг:</strong> ${country.area}</p>
+    <p><strong>Түүх:</strong> ${country.history}</p>
+    <p><strong>Сонирхолтой факт:</strong> ${country.funFact}</p>`;
+  modal.classList.add('active');
+  document.getElementById('closeModal').addEventListener('click',()=>modal.classList.remove('active'));
+}
+
+renderCountries(countries);
+
+searchInput.addEventListener('input',()=>{
+  const term=searchInput.value.toLowerCase();
+  const filtered=countries.filter(c=>c.name.toLowerCase().includes(term));
+  renderCountries(filtered);
+});
+
+sortSelect.addEventListener('change',()=>{
+  const value=sortSelect.value;
+  let sorted=[...countries];
+  if(value==="name"){sorted.sort((a,b)=>a.name.localeCompare(b.name));}
+  else if(value==="population"){
+    sorted.sort((a,b)=>{
+      const popA=parseInt(a.population.replace(/[^0-9]/g,''))||0;
+      const popB=parseInt(b.population.replace(/[^0-9]/g,''))||0;
+      return popB-popA;
+    });
+  }
+  renderCountries(sorted);
+});
+
+const themeToggle=document.getElementById('themeToggle');
+themeToggle.addEventListener('click',()=>{
+  const current=document.body.getAttribute('data-theme');
+  if(current==="light"){
+    document.body.setAttribute('data-theme','dark');
+    themeToggle.textContent="Light Mode";
+  } else {
+    document.body.setAttribute('data-theme','light');
+    themeToggle.textContent="Dark Mode";
+  }
+});
+</script>
 </body>
 </html>
